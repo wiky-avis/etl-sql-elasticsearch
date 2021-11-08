@@ -4,7 +4,7 @@ import sqlite3
 from elasticsearch import Elasticsearch
 from elasticsearch.helpers import streaming_bulk
 
-from const import BODY_SETTINGS, DB_PATH, INDEX_NAME, URL, FIELD_NAMES
+from const import BODY_SETTINGS, DB_PATH, FIELD_NAMES, INDEX_NAME, URL
 
 SQL = """
     WITH x as (
@@ -19,7 +19,7 @@ SQL = """
     FROM movies m LEFT JOIN x ON m.id = x.id
 """
 
-cursor = sqlite3.Connection(DB_PATH)
+conn = sqlite3.Connection(DB_PATH)
 
 
 def create_index(client):
@@ -30,8 +30,8 @@ def create_index(client):
     )
 
 
-def load_in_sqldb():
-    ls_2 = cursor.execute(SQL)
+def load_from_sqldb():
+    ls_2 = conn.execute(SQL)
 
     lll = []
     for tup in ls_2:
@@ -54,13 +54,13 @@ def load_in_sqldb():
 
 def load_writers_names():
     writers = {}
-    for writer in cursor.execute("""SELECT DISTINCT id, name FROM writers"""):
+    for writer in conn.execute("""SELECT DISTINCT id, name FROM writers"""):
         writers[writer[0]] = writer[1]
     return writers
 
 
 def generate_actions():
-    lll = load_in_sqldb()
+    lll = load_from_sqldb()
     writers = load_writers_names()
     for i in lll:
         movie_writers = []
