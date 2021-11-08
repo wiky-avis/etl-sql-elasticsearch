@@ -4,7 +4,7 @@ import sqlite3
 from elasticsearch import Elasticsearch
 from elasticsearch.helpers import streaming_bulk
 
-from const import BODY_SETTINGS, DB_PATH, INDEX_NAME, URL
+from const import BODY_SETTINGS, DB_PATH, INDEX_NAME, URL, FIELD_NAMES
 
 SQL = """
     WITH x as (
@@ -33,21 +33,9 @@ def create_index(client):
 def load_in_sqldb():
     ls_2 = cursor.execute(SQL)
 
-    name_r = [
-        "id",
-        "genre",
-        "director",
-        "title",
-        "plot",
-        "imdb_rating",
-        "actors_ids",
-        "actors_names",
-        "writers"
-    ]
-
     lll = []
     for tup in ls_2:
-        lsss = list(zip(name_r, tup))
+        lsss = list(zip(FIELD_NAMES, tup))
         id, genre, director, title, plot, imdb_rating, actors_ids, actors_names, writers = lsss
         ddd = {
             'id': id[1],

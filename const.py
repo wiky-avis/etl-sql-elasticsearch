@@ -108,3 +108,15 @@ BODY_SETTINGS = {
     }
   }
 }
+
+FIELD_NAMES = [
+        "id",
+        "genre",
+        "director",
+        "title",
+        "plot",
+        "imdb_rating",
+        "actors_ids",
+        "actors_names",
+        "writers"
+    ]
