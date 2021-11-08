@@ -1,11 +1,10 @@
-import sqlite3
 import json
+import sqlite3
+
 from elasticsearch import Elasticsearch
 from elasticsearch.helpers import streaming_bulk
 
-cursor = sqlite3.Connection("db.sqlite")
-
-es_client = Elasticsearch("http://127.0.0.1:9200")
+from const import BODY_SETTINGS, DB_PATH, INDEX_NAME, URL
 
 SQL = """
     WITH x as (
@@ -20,44 +19,61 @@ SQL = """
     FROM movies m LEFT JOIN x ON m.id = x.id
 """
 
-ls_2 = cursor.execute(SQL)
-
-name_r = [
-    "id",
-    "genre",
-    "director",
-    "title",
-    "plot",
-    "imdb_rating",
-    "actors_ids",
-    "actors_names",
-    "writers"
-]
-
-ddd = {}
-lll = []
-for tup in ls_2:
-    lsss = list(zip(name_r, tup))
-    id, genre, director, title, plot, imdb_rating, actors_ids, actors_names, writers = lsss
-    ddd = {
-        'id': id[1],
-        'genre': genre[1],
-        'director': director[1],
-        'title': title[1],
-        'plot': plot[1],
-        'imdb_rating': imdb_rating[1],
-        'actors_ids': actors_ids[1],
-        'actors_names': actors_names[1],
-        'writers': writers[1]
-    }
-    lll.append(ddd)
-
-writers = {}
-for writer in cursor.execute('''SELECT DISTINCT id, name FROM writers'''):
-    writers[writer[0]] = writer[1]
+cursor = sqlite3.Connection(DB_PATH)
 
 
-def gendata():
+def create_index(client):
+    client.indices.create(
+        index=INDEX_NAME,
+        body=BODY_SETTINGS,
+        ignore=400,
+    )
+
+
+def load_in_sqldb():
+    ls_2 = cursor.execute(SQL)
+
+    name_r = [
+        "id",
+        "genre",
+        "director",
+        "title",
+        "plot",
+        "imdb_rating",
+        "actors_ids",
+        "actors_names",
+        "writers"
+    ]
+
+    lll = []
+    for tup in ls_2:
+        lsss = list(zip(name_r, tup))
+        id, genre, director, title, plot, imdb_rating, actors_ids, actors_names, writers = lsss
+        ddd = {
+            'id': id[1],
+            'genre': genre[1],
+            'director': director[1],
+            'title': title[1],
+            'plot': plot[1],
+            'imdb_rating': imdb_rating[1],
+            'actors_ids': actors_ids[1],
+            'actors_names': actors_names[1],
+            'writers': writers[1]
+        }
+        lll.append(ddd)
+    return lll
+
+
+def load_writers_names():
+    writers = {}
+    for writer in cursor.execute("""SELECT DISTINCT id, name FROM writers"""):
+        writers[writer[0]] = writer[1]
+    return writers
+
+
+def generate_actions():
+    lll = load_in_sqldb()
+    writers = load_writers_names()
     for i in lll:
         movie_writers = []
         writers_set = set()
@@ -84,14 +100,22 @@ def gendata():
         yield json.dumps(json_schema)
 
 
-successes = 0
-failed = 0
-for ok, item in streaming_bulk(
-    client=es_client, index="movies", actions=gendata(),
-):
-    if not ok:
-        failed += 1
-    else:
-        successes += 1
+def main():
+    es_client = Elasticsearch(URL)
+    create_index(es_client)
 
-print("Indexed %d/%d documents" % (successes, failed))
+    successes = 0
+    failed = 0
+    for ok, item in streaming_bulk(
+            client=es_client, index="movies", actions=generate_actions(),
+    ):
+        if not ok:
+            failed += 1
+        else:
+            successes += 1
+
+    print("Indexed %d/%d documents" % (successes, failed))
+
+
+if __name__ == "__main__":
+    main()
