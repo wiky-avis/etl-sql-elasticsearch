@@ -88,7 +88,7 @@ def generate_actions():
         yield json.dumps(json_schema)
 
 
-def main():
+def load_to_es():
     es_client = Elasticsearch(URL)
     create_index(es_client)
 
@@ -106,4 +106,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    load_to_es()
