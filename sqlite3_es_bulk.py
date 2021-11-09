@@ -79,7 +79,7 @@ def generate_actions() -> dict:
               "description": i['plot'] if i['plot'] != 'N/A' else None,
               "director": [x.strip() for x in i["director"].split(',')] if i['director'] != 'N/A' else None,
               "actors_names": [x for x in i['actors_names'].split(',') if x != 'N/A'],
-              "writers_names": movie_writers,
+              "writers_names": [x for x in movie_writers],
               "actors": [
                 {"id": _id, "name": name} for _id, name in zip(i["actors_ids"].split(","), i['actors_names'].split(','))
                 if name != "N/A"],

@@ -93,17 +93,8 @@ BODY_SETTINGS = {
         }
       },
       "writers": {
-        "type": "nested",
-        "dynamic": "strict",
-        "properties": {
-          "id": {
-            "type": "keyword"
-          },
-          "name": {
-            "type": "text",
-            "analyzer": "ru_en"
-          }
-        }
+        "type": "text",
+        "analyzer": "ru_en"
       }
     }
   }
