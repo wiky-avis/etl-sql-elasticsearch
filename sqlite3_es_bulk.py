@@ -1,10 +1,10 @@
 import json
 import sqlite3
+from collections import namedtuple
+from typing import List
 
 from elasticsearch import Elasticsearch
 from elasticsearch.helpers import streaming_bulk
-from typing import List
-from collections import namedtuple
 
 from const import BODY_SETTINGS, DB_PATH, FIELD_NAMES, INDEX_NAME, URL
 
