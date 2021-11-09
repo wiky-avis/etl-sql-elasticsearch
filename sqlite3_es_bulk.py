@@ -3,6 +3,8 @@ import sqlite3
 
 from elasticsearch import Elasticsearch
 from elasticsearch.helpers import streaming_bulk
+from typing import List
+from collections import namedtuple
 
 from const import BODY_SETTINGS, DB_PATH, FIELD_NAMES, INDEX_NAME, URL
 
@@ -30,39 +32,37 @@ def create_index(client):
     )
 
 
-def load_from_sqldb():
-    ls_2 = conn.execute(SQL)
+def load_from_sqldb() -> List[dict]:
+    DataSQL = namedtuple("DataSQL", FIELD_NAMES)
+    list_data: List[dict] = []
 
-    lll = []
-    for tup in ls_2:
-        lsss = list(zip(FIELD_NAMES, tup))
-        id, genre, director, title, plot, imdb_rating, actors_ids, actors_names, writers = lsss
-        ddd = {
-            'id': id[1],
-            'genre': genre[1],
-            'director': director[1],
-            'title': title[1],
-            'plot': plot[1],
-            'imdb_rating': imdb_rating[1],
-            'actors_ids': actors_ids[1],
-            'actors_names': actors_names[1],
-            'writers': writers[1]
+    for row in map(DataSQL._make, conn.execute(SQL)):
+        data = {
+            'id': row.id,
+            'genre': row.genre,
+            'director': row.director,
+            'title': row.title,
+            'plot': row.plot,
+            'imdb_rating': row.imdb_rating,
+            'actors_ids': row.actors_ids,
+            'actors_names': row.actors_names,
+            'writers': row.writers
         }
-        lll.append(ddd)
-    return lll
+        list_data.append(data)
+    return list_data
 
 
-def load_writers_names():
+def load_writers_names() -> dict:
     writers = {}
     for writer in conn.execute("""SELECT DISTINCT id, name FROM writers"""):
         writers[writer[0]] = writer[1]
     return writers
 
 
-def generate_actions():
-    lll = load_from_sqldb()
+def generate_actions() -> dict:
+    list_data = load_from_sqldb()
     writers = load_writers_names()
-    for i in lll:
+    for i in list_data:
         movie_writers = []
         writers_set = set()
         for writer in json.loads(i['writers']):
@@ -79,13 +79,15 @@ def generate_actions():
               "description": i['plot'] if i['plot'] != 'N/A' else None,
               "director": [x.strip() for x in i["director"].split(',')] if i['director'] != 'N/A' else None,
               "actors_names": [x for x in i['actors_names'].split(',') if x != 'N/A'],
-              "writers_names": [x for x in movie_writers],
+              "writers_names": movie_writers,
               "actors": [
                 {"id": _id, "name": name} for _id, name in zip(i["actors_ids"].split(","), i['actors_names'].split(','))
                 if name != "N/A"],
               "writers": movie_writers
         }
-        yield json.dumps(json_schema)
+        json_data = json.dumps(json_schema)
+
+        yield json_data
 
 
 def load_to_es():
