@@ -1,2 +1,2 @@
 # etl-sql-elasticsearch
-ETL механизм для загрузки данных из базы данных SQLite в Elasticsearch
+ETL механизм для загрузки фильмов из базы данных SQLite в Elasticsearch
