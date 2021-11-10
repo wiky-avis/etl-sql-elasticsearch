@@ -83,7 +83,7 @@ def generate_actions() -> dict:
               "actors": [
                 {"id": _id, "name": name} for _id, name in zip(i["actors_ids"].split(","), i['actors_names'].split(','))
                 if name != "N/A"],
-              "writers": movie_writers
+              "writers": [{"id": _id, "name": name} for _id, name in zip(i['writers'], movie_writers)]
         }
         json_data = json.dumps(json_schema)
 
