@@ -81,7 +81,9 @@ def generate_actions() -> dict:
               "actors_names": [x for x in i['actors_names'].split(',') if x != 'N/A'],
               "writers_names": [x for x in movie_writers],
               "actors": [
-                {"id": _id, "name": name} for _id, name in zip(i["actors_ids"].split(","), i['actors_names'].split(','))
+                {"id": _id, "name": name} for _id, name in zip(
+                      i["actors_ids"].split(","), i['actors_names'].split(',')
+                  )
                 if name != "N/A"],
               "writers": [{"id": _id, "name": name} for _id, name in zip(i['writers'], movie_writers)]
         }
