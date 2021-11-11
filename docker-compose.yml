@@ -1,17 +1,56 @@
-version: "2"
+version: "3.2"
+
 services:
-  elasticsearch:
-    image: 'docker.elastic.co/elasticsearch/elasticsearch:7.14.2'
-    container_name: 'elasticsearch'
-    ports:
-      - 9200:9200
-    environment:
-      discovery.type: single-node
-  kibana:
-    image: 'docker.elastic.co/kibana/kibana:7.14.2'
-    container_name: 'kibana'
-    ports:
-      - 5601:5601
-    environment:
-      SERVER_NAME: kibana.my-organization.com
-      ELASTICSEARCH_URL: http://elasticsearch:9200
+ filebeat:
+   build:
+     context: filebeat_docker
+   networks:
+     - filebeat_docker
+
+ elasticsearch:
+   build:
+     context: docker_elk/elasticsearch
+   volumes:
+     - type: volume
+       source: elasticsearch
+       target: /usr/share/elasticsearch/data
+   ports:
+     - 9200:9200
+     - 9300:9300
+   environment:
+     ES_JAVA_OPTS: "-Xmx256m -Xms256m"
+     discovery.type: single-node
+   networks:
+     - elk_stack
+
+ logstash:
+   build:
+     context: docker_elk/logstash
+   ports:
+     - 5000:5000
+     - 9600:9600
+   environment:
+     LS_JAVA_OPTS: "-Xmx256m -Xms256m"
+   networks:
+     - elk_stack
+   depends_on:
+     - elasticsearch
+
+ kibana:
+   build:
+     context: docker_elk/kibana
+   ports:
+     - 5601:5601
+   networks:
+     - elk_stack
+   depends_on:
+     - elasticsearch
+
+networks:
+ elk_stack:
+   driver: bridge
+ filebeat_docker:
+   driver: bridge
+
+volumes:
+ elasticsearch:
