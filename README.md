@@ -15,7 +15,7 @@ Python-скрипт, который перегружает данные из SQL
 
     `source venv/bin/activate`
 
-Ус тановите необходимые зависимости:
+Установите необходимые зависимости:
 
     `pip install -r requirements.txt`
 
